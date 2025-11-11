@@ -1,0 +1,131 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+    <style>
+      .ui-container {
+        position: absolute;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        display: flex;
+        gap: 10px;
+      }
+      .btn {
+        background-color: rgba(255, 255, 255, 0.8);
+        border: 2px solid #8B0000;
+        border-radius: 20px;
+        padding: 10px 20px;
+        font-weight: bold;
+        cursor: pointer;
+        font-family: sans-serif;
+      }
+      .btn.active {
+        background-color: #8B0000;
+        color: white;
+      }
+      /* Tombol "Lihat Model 3D" */
+      .lihat3d {
+        position: absolute;
+        top: 80%;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: black;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-family: sans-serif;
+        cursor: pointer;
+        display: none; /* hanya muncul ketika keris aktif */
+        z-index: 999;
+      }
+    </style>
+  </head>
+  <body>
+    
+    <div class="ui-container">
+      <button class="btn" id="btn-merah" onclick="tampilSatuKeris('keris-merah')">Keris Merah</button>
+      <button class="btn" id="btn-emas" onclick="tampilSatuKeris('keris-emas')">Keris Silver</button>
+      <button class="btn" id="btn-hitam" onclick="tampilSatuKeris('keris-hitam')">Keris Hitam</button>
+    </div>
+
+    <!-- Tombol Lihat Model 3D -->
+    <button id="lihat3d-btn" class="lihat3d" onclick="bukaHalamanModel()">Lihat Model 3D</button>
+
+    <a-scene
+      mindar-image="imageTargetSrc: targets.mind;"
+      color-space="sRGB"
+      renderer="colorManagement: true, physicallyCorrectLights"
+      vr-mode-ui="enabled: false"
+      device-orientation-permission-ui="enabled: false">
+
+      <a-assets>
+        <a-asset-item id="keris1" src="red_skull_keris.glb"></a-asset-item>
+        <a-asset-item id="keris2" src="simple_keris.glb"></a-asset-item>
+        <a-asset-item id="keris3" src="dark_keris.glb"></a-asset-item>
+      </a-assets>
+
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+      <a-entity mindar-image-target="targetIndex: 0">
+        <a-gltf-model id="keris-merah" src="#keris1" position="0 0 0.1" rotation="0 0 -90" scale="0.1 0.1 0.1" visible="false"></a-gltf-model>
+        <a-gltf-model id="keris-emas" src="#keris2" position="0 0 0.1" rotation="0 0 -90" scale="0.1 0.1 0.1" visible="false"></a-gltf-model>
+        <a-gltf-model id="keris-hitam" src="#keris3" position="0 0 0.1" rotation="0 0 -90" scale="0.1 0.1 0.1" visible="false"></a-gltf-model>
+      </a-entity>
+    </a-scene>
+
+    <script>
+      let kerisAktif = null;
+
+      function tampilSatuKeris(idTampil) {
+        const semuaKeris = ['keris-merah', 'keris-emas', 'keris-hitam'];
+        const semuaTombol = ['btn-merah', 'btn-emas', 'btn-hitam'];
+        const lihat3dBtn = document.getElementById('lihat3d-btn');
+
+        semuaKeris.forEach((id) => {
+          document.getElementById(id).setAttribute('visible', false);
+        });
+        semuaTombol.forEach((btn) => {
+          document.getElementById(btn).classList.remove('active');
+        });
+
+        const model = document.getElementById(idTampil);
+        model.setAttribute('visible', true);
+
+        const tombolAktif = document.getElementById(`btn-${idTampil.split('-')[1]}`);
+        tombolAktif.classList.add('active');
+
+        // Simpan keris aktif untuk membuka halaman yang sesuai
+        kerisAktif = idTampil;
+
+        // Tampilkan tombol "Lihat Model 3D"
+        lihat3dBtn.style.display = 'block';
+      }
+
+      function bukaHalamanModel() {
+        if (!kerisAktif) return;
+
+        // Tentukan halaman yang sesuai berdasarkan keris yang aktif
+        let url = '';
+        switch (kerisAktif) {
+          case 'keris-merah':
+            url = 'model3d_merah.html';
+            break;
+          case 'keris-emas':
+            url = 'https://tiuk821.github.io/keris-blippar/';
+            break;
+          case 'keris-hitam':
+            url = 'model3d_hitam.html';
+            break;
+        }
+
+        window.location.href = url;
+      }
+    </script>
+
+  </body>
+</html>
