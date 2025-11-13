@@ -5,13 +5,19 @@
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
     <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+
+      /* Panel tombol pilihan keris */
       .ui-container {
         position: absolute;
         bottom: 30px;
         left: 50%;
         transform: translateX(-50%);
         z-index: 1000;
-        display: flex;
+        display: none; /* disembunyikan dulu */
         gap: 10px;
       }
       .btn {
@@ -27,35 +33,88 @@
         background-color: #8B0000;
         color: white;
       }
-      /* Tombol "Lihat Model 3D" */
-      .lihat3d {
+
+      /* Tombol Info */
+      .info-btn {
         position: absolute;
         top: 80%;
         left: 50%;
         transform: translateX(-50%);
-        background-color: black;
+        background-color: #8B0000;
         color: white;
-        padding: 10px 20px;
+        padding: 10px 25px;
         border-radius: 20px;
         font-weight: bold;
         font-family: sans-serif;
         cursor: pointer;
-        display: none; /* hanya muncul ketika keris aktif */
-        z-index: 999;
+        z-index: 1000;
+        display: none;
+      }
+
+      /* Panel info */
+      .info-panel {
+        position: absolute;
+        top: 60%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 20px;
+        padding: 20px;
+        width: 80%;
+        max-width: 350px;
+        text-align: center;
+        font-family: sans-serif;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        z-index: 2000;
+        display: none;
+      }
+
+      .info-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #8B0000;
+        margin-bottom: 10px;
+      }
+
+      .info-text {
+        font-size: 14px;
+        margin-bottom: 15px;
+        color: black;
+      }
+
+      .panel-btn {
+        background-color: black;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        padding: 8px 16px;
+        margin: 5px;
+        cursor: pointer;
+        font-weight: bold;
       }
     </style>
   </head>
   <body>
     
-    <div class="ui-container">
+    <!-- Tombol pilihan keris -->
+    <div class="ui-container" id="ui-container">
       <button class="btn" id="btn-merah" onclick="tampilSatuKeris('keris-merah')">Keris Merah</button>
       <button class="btn" id="btn-emas" onclick="tampilSatuKeris('keris-emas')">Keris Silver</button>
       <button class="btn" id="btn-hitam" onclick="tampilSatuKeris('keris-hitam')">Keris Hitam</button>
     </div>
 
-    <!-- Tombol Lihat Model 3D -->
-    <button id="lihat3d-btn" class="lihat3d" onclick="bukaHalamanModel()">Lihat Model 3D</button>
+    <!-- Tombol Info -->
+    <button id="info-btn" class="info-btn" onclick="tampilInfo()">Info</button>
 
+    <!-- Panel Info -->
+    <div id="info-panel" class="info-panel">
+      <div class="info-title" id="info-title"></div>
+      <div class="info-text" id="info-text"></div>
+      <button class="panel-btn" id="lihat3d-btn" onclick="bukaHalamanModel()">Lihat Model 3D</button>
+      <button class="panel-btn" onclick="tutupInfo()">Tutup</button>
+    </div>
+
+    <!-- Scene AR -->
     <a-scene
       mindar-image="imageTargetSrc: targets.mind;"
       color-space="sRGB"
@@ -71,7 +130,7 @@
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-      <a-entity mindar-image-target="targetIndex: 0">
+      <a-entity id="target" mindar-image-target="targetIndex: 0">
         <a-gltf-model id="keris-merah" src="#keris1" position="0 0 0.1" rotation="0 0 -90" scale="0.1 0.1 0.1" visible="false"></a-gltf-model>
         <a-gltf-model id="keris-emas" src="#keris2" position="0 0 0.1" rotation="0 0 -90" scale="0.1 0.1 0.1" visible="false"></a-gltf-model>
         <a-gltf-model id="keris-hitam" src="#keris3" position="0 0 0.1" rotation="0 0 -90" scale="0.1 0.1 0.1" visible="false"></a-gltf-model>
@@ -81,52 +140,75 @@
     <script>
       let kerisAktif = null;
 
+      const infoData = {
+        "keris-merah": {
+          title: "Keris Merah",
+          text: "Keris ini melambangkan keberanian dan semangat juang. Warna merah menunjukkan kekuatan dan tekad yang tinggi.",
+          url: "model3d_merah.html"
+        },
+        "keris-emas": {
+          title: "Keris Silver",
+          text: "Keris ini melambangkan kejernihan pikiran dan kemurnian niat. Warna silver menunjukkan kebijaksanaan dan keseimbangan.",
+          url: "https://tiuk821.github.io/keris-blippar/"
+        },
+        "keris-hitam": {
+          title: "Keris Hitam",
+          text: "Keris ini melambangkan misteri, kekuatan tersembunyi, dan kebijaksanaan dalam kegelapan.",
+          url: "model3d_hitam.html"
+        }
+      };
+
       function tampilSatuKeris(idTampil) {
         const semuaKeris = ['keris-merah', 'keris-emas', 'keris-hitam'];
         const semuaTombol = ['btn-merah', 'btn-emas', 'btn-hitam'];
-        const lihat3dBtn = document.getElementById('lihat3d-btn');
+        const infoBtn = document.getElementById('info-btn');
+        const panelInfo = document.getElementById('info-panel');
 
-        semuaKeris.forEach((id) => {
-          document.getElementById(id).setAttribute('visible', false);
-        });
-        semuaTombol.forEach((btn) => {
-          document.getElementById(btn).classList.remove('active');
-        });
+        semuaKeris.forEach(id => document.getElementById(id).setAttribute('visible', false));
+        semuaTombol.forEach(btn => document.getElementById(btn).classList.remove('active'));
 
-        const model = document.getElementById(idTampil);
-        model.setAttribute('visible', true);
+        document.getElementById(idTampil).setAttribute('visible', true);
+        document.getElementById(`btn-${idTampil.split('-')[1]}`).classList.add('active');
 
-        const tombolAktif = document.getElementById(`btn-${idTampil.split('-')[1]}`);
-        tombolAktif.classList.add('active');
-
-        // Simpan keris aktif untuk membuka halaman yang sesuai
         kerisAktif = idTampil;
+        infoBtn.style.display = 'block';
+        panelInfo.style.display = 'none'; // tutup panel kalau ganti keris
+      }
 
-        // Tampilkan tombol "Lihat Model 3D"
-        lihat3dBtn.style.display = 'block';
+      function tampilInfo() {
+        if (!kerisAktif) return;
+        const data = infoData[kerisAktif];
+        document.getElementById('info-title').innerText = data.title;
+        document.getElementById('info-text').innerText = data.text;
+        document.getElementById('info-panel').style.display = 'block';
+      }
+
+      function tutupInfo() {
+        document.getElementById('info-panel').style.display = 'none';
       }
 
       function bukaHalamanModel() {
         if (!kerisAktif) return;
-
-        // Tentukan halaman yang sesuai berdasarkan keris yang aktif
-        let url = '';
-        switch (kerisAktif) {
-          case 'keris-merah':
-            url = 'keris-3.html';
-            break;
-          case 'keris-emas':
-            url = 'index4.html';
-            break;
-          case 'keris-hitam':
-            url = 'keris-2.html';
-            break;
-        }
-
-        window.location.href = url;
+        window.location.href = infoData[kerisAktif].url;
       }
+
+      // 🔥 Tampilkan tombol hanya saat marker terdeteksi
+      const target = document.getElementById("target");
+      const uiContainer = document.getElementById("ui-container");
+      const infoBtn = document.getElementById("info-btn");
+      const infoPanel = document.getElementById("info-panel");
+
+      target.addEventListener("targetFound", () => {
+        uiContainer.style.display = "flex";
+        if (kerisAktif) infoBtn.style.display = "block";
+      });
+
+      target.addEventListener("targetLost", () => {
+        uiContainer.style.display = "none";
+        infoBtn.style.display = "none";
+        infoPanel.style.display = "none";
+      });
     </script>
 
   </body>
 </html>
-
